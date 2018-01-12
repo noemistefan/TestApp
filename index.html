@@ -3,5 +3,45 @@
 <body>
 <h1>Hello World</h1>
 <p>I'm hosted with GitHub Pages.</p>
+  <%graphql
+  # Fragments are parts of queries, they can't be executed themselves.
+  # This fragment is defined on the User type and is named "Viewer". You can
+  # name the fragment whatever you'd like. Its the name that is exported as
+  # a Ruby constant, so it must start with a capital letter.
+  #
+  # Its exported as "Views::Repositories::Index::Viewer". The module path to
+  # the tempate then the name of the fragment.
+  fragment Viewer on User {
+    # Initially, fetch the first 10 repositories. We'll show a "load more"
+    # button to demostrate GraphQL connection cursors.
+    repositories(first: 10) {
+      # The only data we're using directly in this template is the total number
+      # of repositories. Also note that its camelcase here.
+      totalCount
+      # Include data dependencies of app/views/repositories/_repositories.html.erb
+      # All renders in this template will map to a fragment spread to
+      # statically define the view composition relationship.
+      ...Views::Repositories::Repositories::RepositoryConnection
+    }
+  }
+%>
+    <% viewer = Views::Repositories::Index::Viewer.new(viewer) %>
+
+<div class="repositories">
+  <ul class="list-group">
+    <li class="list-group-item">
+      <strong>Your repositories</strong>
+      <%# NOTE: total_count is snake case here %>
+      <span class="badge"><%= viewer.repositories.total_count %></span>
+    </li>
+
+    <%#
+      render repositories subview passing along viewer.repositories
+      See that Views::Repositories::Repositories::RepositoryConnection is
+      declared in our static fragment.
+    %>
+    <%= render "repositories/repositories", repositories: viewer.repositories %>
+  </ul>
+</div>
 </body>
 </html>
